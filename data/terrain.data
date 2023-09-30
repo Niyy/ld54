@@ -1,0 +1,8 @@
+{
+    terrain: [{path: 'sprites/terrain/grass00.png',  
+               flora: [{path: 'sprites/circle/green.png', resource: :wood, 
+                        _max: 50, _min: 5, w_low: 8, w_high: 16, h_low: 8,
+                        h_high: 16, dim: :single},
+                       {path: 'sprites/circle/blue.png', resource: :food, 
+                        _max: 3, _min: 3, w_low: 8, w_high: 16, h_low: 8,
+                        h_high: 16, dim: :single}]}]}

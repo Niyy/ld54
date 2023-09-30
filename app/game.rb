@@ -1,18 +1,23 @@
 class Game
     attr_gtk
+    attr_accessor :map
 
 
     @@idx_file = 0
 
 
-    def initialize()
-        @character = gen_obj()
+    def initialize(args)
+        @character = Entity.new(gen_idx(), x: 1280 / 2, y: 720 / 2,
+                                path: 'sprites/square/orange.png')
 
-        @character.x = 1280 / 2
-        @character.y = 720 / 2
-        @character.speed = 2 
-        @character.mov = [0, 0]
-        @character.path = 'sprites/circle/violet.png'
+        loaded_terrain = args.gtk.deserialize_state('data/terrain.data').terrain
+        puts loaded_terrain
+
+# Map set up
+        @map = Map.new(max_cells: 100, delta: 100, terrain: loaded_terrain)
+        @map.x = 1280 / 2 - @map.fill_value.h_w
+        @map.y = 720 / 2 - @map.fill_value.h_h
+        @map.gen_map(->{gen_idx})
 
         @keyboard = {
             mouse: {
@@ -33,8 +38,12 @@ class Game
 
 
     def output()
+        outputs.background_color = [90, 166, 196]
+
+        outputs.sprites << @map.output()
         outputs.sprites << @col[:cities].values
-        outputs.sprites << @character 
+        outputs.sprites << @character.output()
+        outputs.sprites << @map.output_flora()
     end
 
 
@@ -47,15 +56,14 @@ class Game
 #            new_city.path = 'sprites/circle/orange.png'
 #
 #            @col[:cities][new_city.idx] = new_city
-            mov = [
-                @keyboard.mouse_pos.x - @character.x - @character.w / 2,
-                @keyboard.mouse_pos.y - @character.y - @character.h / 2
-            ]
+            mov = [@keyboard.mouse_pos.x - @character.x - @character.h_w,
+                   @keyboard.mouse_pos.y - @character.y - @character.h_h]
 
             angle = Math.atan2(mov.y, mov.x)
             mov.x = Math.cos(angle) * @character.speed
             mov.y = Math.sin(angle) * @character.speed
 
+            @character.angle = angle * 180 / Math::PI
             @character.mov = mov
             @character.dest = [@keyboard.mouse_pos.x, @keyboard.mouse_pos.y]
         end
@@ -63,11 +71,15 @@ class Game
 #       Character move
         @character.x += @character.mov.x
         @character.y += @character.mov.y
-        puts geometry.distance(@character, @character.dest) <= 32 if(
-            !@character.dest.nil?)
+
+        char_mid = [@character.x + @character.h_w, 
+                    @character.y + @character.h_h]
+
+        if(!@character.dest.nil?)
+            puts geometry.distance(char_mid, @character.dest) 
+        end
         if(!@character.dest.nil? &&
-            geometry.distance(@character, @character.dest) <= @character.w / 2
-        )
+           geometry.distance(char_mid, @character.dest) <= @character.w / 2)
             @character.mov = [0, 0]
         end
     end
@@ -75,13 +87,11 @@ class Game
 
     def input()
         if(inputs.mouse.button_left && 
-                @keyboard.mouse.left_button[1] == :up)
+           @keyboard.mouse.left_button[1] == :up)
             @keyboard.mouse.left_button = [state.tick_count, :down]
-            puts "#{@keyboard.mouse.left_button}"
         elsif(!inputs.mouse.button_left &&
-                @keyboard.mouse.left_button[1] == :down)
+              @keyboard.mouse.left_button[1] == :down)
             @keyboard.mouse.left_button = [state.tick_count, :up]
-            puts "#{@keyboard.mouse.left_button}"
         end
 
         @keyboard.mouse_pos = [inputs.mouse.x, inputs.mouse.y]
@@ -94,11 +104,19 @@ class Game
 
         return { x: 0, y: 0, w: 32, h: 32, idx: idx }
     end
+
+
+    def gen_idx()
+        idx = @@idx_file
+        @@idx_file += 1
+
+        return idx
+    end
 end
 
 
 def tick(args)
-    $game ||= Game.new()
+    $game ||= Game.new(args)
 
     $game.args = args
     $game.tick()
