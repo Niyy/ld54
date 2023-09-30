@@ -11,11 +11,12 @@ class Game
         @character.x = 1280 / 2
         @character.y = 720 / 2
         @character.speed = 2 
+        @character.mov = [0, 0]
         @character.path = 'sprites/circle/violet.png'
 
         @keyboard = {
             mouse: {
-                left_button: [-1, :up]
+                left_button: [-2, :up]
             }
         }
 
@@ -38,7 +39,7 @@ class Game
 
 
     def update()
-        if(@keyboard.mouse.left_button[0] == state.tick_count &&
+        if(@keyboard.mouse.left_button[0] + 1 == state.tick_count &&
                 @keyboard.mouse.left_button[1] == :up)
 #            new_city = gen_obj()
 #            new_city.x = @keyboard.mouse_pos.x - (new_city.w / 2)
@@ -47,19 +48,28 @@ class Game
 #
 #            @col[:cities][new_city.idx] = new_city
             mov = [
-                @keyboard.mouse_pos.x - @character.x,
-                @keyboard.mouse_pos.y - @character.y
+                @keyboard.mouse_pos.x - @character.x - @character.w / 2,
+                @keyboard.mouse_pos.y - @character.y - @character.h / 2
             ]
+
             angle = Math.atan2(mov.y, mov.x)
             mov.x = Math.cos(angle) * @character.speed
             mov.y = Math.sin(angle) * @character.speed
 
             @character.mov = mov
+            @character.dest = [@keyboard.mouse_pos.x, @keyboard.mouse_pos.y]
         end
 
 #       Character move
         @character.x += @character.mov.x
         @character.y += @character.mov.y
+        puts geometry.distance(@character, @character.dest) <= 32 if(
+            !@character.dest.nil?)
+        if(!@character.dest.nil? &&
+            geometry.distance(@character, @character.dest) <= @character.w / 2
+        )
+            @character.mov = [0, 0]
+        end
     end
 
 
