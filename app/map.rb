@@ -1,5 +1,5 @@
 class Map
-    attr_accessor :cells, :x, :y, :delta, :fill_value
+    attr_accessor :cells, :x, :y, :delta, :fill_value, :col
 
 
     def initialize(max_cells: 5, delta: 100, fill_value: {}, 
@@ -103,9 +103,6 @@ class Map
         return if(spawning > @flora_spawn_chance)
 
         cell.terrain.flora.each() do |entity|
-            n_flora = {x: cell.x + rand() * cell.w, y: cell.y + rand() * cell.h, 
-                       w: 16, h: 16, path: entity.path, type: entity.resource}
-            
             max_add = entity._max - entity._min
             actual_count = entity._min + (rand() * max_add).round()
 
@@ -116,17 +113,27 @@ class Map
                 cell.flora[get_idx.call] = {x: cell.x + rand() * cell.w, 
                                             y: cell.y + rand() * cell.h, w: 16, 
                                             h: 16, path: entity.path, 
-                                            type: entity.resource}.sprite!
+                                            resource: entity.resource}.sprite!
             end
         end
     end
 
 
     def update(args)
+        cul_list = []
+
         @col.entities.values.each() do |entity|
-            remove_entity(calc_key([@x, @y]), @idx)
-            entity.update(args)
+            remove_entity(calc_key([entity.x, entity.y]), entity.idx)
+            entity.update(args, self)
             add_entity(entity)
+
+            cul_list << entity if(entity.fighters.length <= 0 && 
+                                  entity.freefolk <= 0)
+        end
+
+        cul_list.each() do |cul|
+            remove_entity(calc_key([cul.x, cul.y]), cul.idx)
+            kill_entity(cul)
         end
     end
 
@@ -138,13 +145,14 @@ class Map
             @cells[_key].entities[entity.idx] = entity
             @col[:entities][entity.idx] = entity
             entity.map_key = _key
+        else
+            @col[:entities][entity.idx] = entity
         end
     end
 
 
     def remove_entity(_key, idx)
         if(@cells.has_key?(_key) && @cells[_key].entities.has_key?(idx))
-            @cells[_key].entities[idx].map_key = nil
             @cells[_key].entities.delete(idx)
         end
     end
@@ -183,8 +191,8 @@ class Map
     def output_entities()
         outputs = []
         
-        @cells.values.each() do |cell|
-            outputs << cell.entities.values
+        @col.entities.values.each() do |entity|
+            outputs << entity 
         end
 
         return outputs

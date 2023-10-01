@@ -1,6 +1,6 @@
 class Game
     attr_gtk
-    attr_accessor :map
+    attr_accessor :map, :hunters
 
 
     @@idx_file = 0
@@ -15,9 +15,6 @@ class Game
         @map.x = 1280 / 2 - @map.fill_value.h_w
         @map.y = 720 / 2 - @map.fill_value.h_h
         @map.gen_map(->{gen_idx})
-
-        @map.add_entity({x: -300, y: 0, w: 100, h: 100, a: 50, idx: gen_idx,
-                         path: 'sprite/square/black.rb'})
 
         @keyboard = {
             mouse: {
@@ -39,6 +36,14 @@ class Game
 
         @map.add_entity(follower)
         @map.add_entity(@character)
+
+        # Add a squad of hunters
+        @hunters = []
+        @hunters << Hunter.new(gen_idx(), x: -100, y: 720 * rand(),
+                               path: 'sprites/square/orange.png', speed: 1)
+        @hunters[0].train(10)
+
+        @map.add_entity(@hunters[0])
     end
 
 

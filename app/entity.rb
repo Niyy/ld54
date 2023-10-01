@@ -1,7 +1,8 @@
 class Entity 
     attr_sprite
     attr_accessor :x, :y, :w, :h, :path, :speed, :mov, :h_w, :h_h, :dest, 
-                  :angle, :to_angle, :idx, :prev, :next, :map_key
+                  :angle, :to_angle, :idx, :prev, :next, :map_key, :fighters,
+                  :freefolk
 
 
     def initialize(idx, x: 0, y: 0, w: 32, h: 32, 
@@ -16,6 +17,12 @@ class Entity
         @to_angle = 0
         @path = path
 
+        @stock = {food: 0, wood: 0}
+        @fighters = []
+        @freefolk = 100 
+
+        @orders = {}
+
         @map_key = nil
 
         @h_w = @w / 2
@@ -25,15 +32,17 @@ class Entity
 
         @next = nil 
         @prev = nil 
+
+        @forage_base = 10 * 60
     end
 
 
-    def update(args)
+    def update(args, map = nil)
         move(args.geometry)
-    end
-
-
-    def follow()
+        if(args.tick_count % (@forage_base * (10 / @freefolk)).floor() == 0)
+            forage(map) 
+        end
+        consume()
     end
 
 
@@ -91,6 +100,89 @@ class Entity
     end
 
 
+    def take(stock, amount)
+        actual_amount = amount
+
+        @stock[stock] -= amount
+
+        if(@stock[stock] < 0)
+            actual_amount += @stock[stock]
+            @stock[stock] = 0
+        end
+
+        return actual_amount
+    end
+
+
+    def hit(fighters)
+        attack_roll = rand() 
+        defend_roll = rand() 
+
+        if(attack_roll > defend_roll)
+            choice_f = fighters.sample()
+            choice_d = @fighters.sample()
+
+            choice_d.health -= rand() * choice.f.damage
+        end
+
+        if(attack_roll < defend_roll)
+            choice_d = fighters.sample()
+            choice_f = @fighters.sample()
+
+            choice_d.health -= rand() * choice.f.damage
+        end
+    end
+
+
+    def train(amount, immediate = false)
+        if(immediate)
+            @fighters << { health: 3, damage: 1 }
+        end
+
+        return false if(@freefolk - amount <= 50)
+
+        @orders << {action: :train, count: amount}
+        @freefolk - amount
+    end
+
+
+    def forage(map)
+        return if(@mov > 0 || @freefolk <= 0 || !map.cells.has_key?(@map_key) ||
+                  !map.cells[@map_key].has_key?(:flora) || 
+                  map.cells[@map_key].flora.length <= 0)
+
+        (@freefolk / 10).ceil().times() do |folk|
+            what_key = map.cells[@map_key].flora.keys.sample
+            what = map.cells[@map_key].flora[what_key]
+
+            puts "trying to forage: #{what}"
+
+            if(what.resource == :food)
+                @stock[:food] += 10
+                map.cells[@map_key].flora.delete(what_key)
+            end
+        end
+    end
+
+
+    def consume()
+        @stock[:food] -= (@freefolk / 20) - @fighters.length
+    end
+
+
+    def handle_orders(tick_count)
+        @orders.each() do |order|
+             
+        end
+    end
+
+
+    def has?(stock)
+        return true if(@stock.has_key?(stock))
+        return false
+    end
+
+
     def output()
         return { x: @x, y: @y, w: @w, h: @h, angle: @angle, 
                  path: @path }.sprite!()
@@ -99,7 +191,7 @@ class Entity
 
     def serialize()
         return { x: @x, y: @y, w: @w, h: @h, path: @path, speed: @speed, 
-                 mov: @mov }
+                 mov: @mov, dest: @dest, map_key: @map_key }
     end
 
     
