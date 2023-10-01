@@ -5,4 +5,8 @@
                         h_high: 16, dim: :single},
                        {path: 'sprites/circle/blue.png', resource: :food, 
                         _max: 3, _min: 3, w_low: 8, w_high: 16, h_low: 8,
-                        h_high: 16, dim: :single}]}]}
+                        h_high: 16, dim: :single}],
+               features: [{path: 'sprites/triangle/equilateral/violet.png', 
+                           w_high: 64, w_low: 32, h_high: 64, h_low: 32, 
+                           _min: 1, _max: 5, dim: :multi, blocking: true, 
+                           chance: 0.05}]}]}

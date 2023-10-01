@@ -25,8 +25,11 @@ class Map
         @fill_value.idx = [0, 0]
         @fill_value.entities = {}
 
+        @flora_spawn_chance = 0.1
+        
+        @col = {entities: {}}
         @cells = {}
-        @cells[[0, 0]] = @fill_value.clone()
+        @cells[[0, 0]] = @fill_value.copy()
 
         @max_cells = max_cells
     end
@@ -34,7 +37,7 @@ class Map
 
     def gen_map(get_idx)
         @cells = {}
-        @cells[[0, 0]] = @fill_value.clone()
+        @cells[[0, 0]] = @fill_value.copy()
     
         used = {}
         queued = [[0,0]]
@@ -42,7 +45,7 @@ class Map
         @max_cells.times() do |time|
             next_cell = queued.shift() 
 
-            @cells[next_cell] = @fill_value.clone()
+            @cells[next_cell] = @fill_value.copy()
             @cells[next_cell].x += @x + next_cell.x * @fill_value.w
             @cells[next_cell].y += @y + next_cell.y * @fill_value.h
             @cells[next_cell].idx = next_cell
@@ -56,14 +59,48 @@ class Map
                     used[to_queue] = 1
                 end
             end
-
+            
             gen_resources(@cells[next_cell], get_idx) if(!@terrain.nil?)
+            gen_features(@cells[next_cell], get_idx) if(!@terrain.nil?)
+        end
+    end
+
+
+    def gen_features(cell, get_idx)
+        cell.features = {}
+        spawning = rand()
+
+        cell.terrain.features.each() do |entity|
+            next if(entity.chance < rand())
+           
+            max_add = entity._max - entity._min
+            actual_count = entity._min + (rand() * max_add).round()
+            
+            w = entity.w_high
+            h = entity.w_high
+            h = entity.h_high if(entity.dim == :multi)
+
+            puts "actual count: #{actual_count}"
+            puts "-----------------------------"
+
+            actual_count.times() do |count|
+                idx = get_idx.call
+                cell.features[get_idx.call] = {x: cell.x + rand() * cell.w, 
+                                               w: w, h: h, 
+                                               y: cell.y + rand() * cell.h, 
+                                               path: entity.path, idx: idx, 
+                                               type: entity.resource}
+
+            end
         end
     end
 
 
     def gen_resources(cell, get_idx)
         cell.flora = {}
+        spawning = rand()
+
+        return if(spawning > @flora_spawn_chance)
 
         cell.terrain.flora.each() do |entity|
             n_flora = {x: cell.x + rand() * cell.w, y: cell.y + rand() * cell.h, 
@@ -72,10 +109,24 @@ class Map
             max_add = entity._max - entity._min
             actual_count = entity._min + (rand() * max_add).round()
 
+            puts "actual count: #{actual_count}"
+            puts "-----------------------------"
+
             actual_count.times() do |count|
-                puts get_idx
-                cell.flora[get_idx.call] = n_flora.clone().sprite()
+                cell.flora[get_idx.call] = {x: cell.x + rand() * cell.w, 
+                                            y: cell.y + rand() * cell.h, w: 16, 
+                                            h: 16, path: entity.path, 
+                                            type: entity.resource}.sprite!
             end
+        end
+    end
+
+
+    def update(args)
+        @col.entities.values.each() do |entity|
+            remove_entity(calc_key([@x, @y]), @idx)
+            entity.update(args)
+            add_entity(entity)
         end
     end
 
@@ -85,15 +136,22 @@ class Map
 
         if(@cells.has_key?(_key))
             @cells[_key].entities[entity.idx] = entity
+            @col[:entities][entity.idx] = entity
             entity.map_key = _key
         end
     end
 
 
     def remove_entity(_key, idx)
-        if(@cells.has_key?(_key))
+        if(@cells.has_key?(_key) && @cells[_key].entities.has_key?(idx))
+            @cells[_key].entities[idx].map_key = nil
             @cells[_key].entities.delete(idx)
         end
+    end
+
+
+    def kill_entity(entity)
+        @col[:entities].delete(entity.idx) 
     end
 
 
@@ -108,14 +166,17 @@ class Map
     end
 
 
-    def output_flora()
+    def output_aux()
         outputs = []
         
-        @cells.values.each() do |cell_flora|
-            outputs << cell_flora.flora.values
+        @cells.values.each() do |cell|
+            outputs << cell.flora.values
+            outputs << cell.features.values
         end
            
-        return outputs
+        return outputs.flatten.sort {|a, b| 
+            b.y <=> a.y
+        }
     end
 
 

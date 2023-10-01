@@ -11,7 +11,7 @@ class Game
         puts loaded_terrain
 
 # Map set up
-        @map = Map.new(max_cells: 100, delta: 100, terrain: loaded_terrain)
+        @map = Map.new(max_cells: 100, delta: 64, terrain: loaded_terrain)
         @map.x = 1280 / 2 - @map.fill_value.h_w
         @map.y = 720 / 2 - @map.fill_value.h_h
         @map.gen_map(->{gen_idx})
@@ -28,7 +28,7 @@ class Game
         @col = {}
         @col[:cities] = {}
 
-        @character = Main_Command.new(gen_idx(), x: 1280 / 2, y: 720 / 2, 
+        @character = Entity.new(gen_idx(), x: 1280 / 2, y: 720 / 2, 
                                       speed: 1, 
                                       path: 'sprites/square/orange.png')
         follower = Entity.new(gen_idx(), x: 1280 / 2 - 100, y: 720 / 2 - 100,
@@ -54,9 +54,8 @@ class Game
 
         outputs.sprites << @map.output()
         outputs.sprites << @col[:cities].values
-        outputs.sprites << @character.output()
         outputs.sprites << @map.output_entities()
-        outputs.sprites << @map.output_flora()
+        outputs.sprites << @map.output_aux()
     end
 
 
@@ -78,9 +77,8 @@ class Game
             @character.mov = 1
             @character.dest = [@keyboard.mouse_pos.x, @keyboard.mouse_pos.y]
         end
-
-#       Character move
-        @character.move(@map, geometry)
+    
+        @map.update(args)
     end
 
 

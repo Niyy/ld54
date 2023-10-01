@@ -28,13 +28,21 @@ class Entity
     end
 
 
+    def update(args)
+        move(args.geometry)
+    end
+
+
     def follow()
     end
 
 
-    def move(map, geometry)
-        if(!@next.nil? && geometry.distance(@next, self))
+    def move(geometry)
+        buffer = 2
+
+        if(!@next.nil? && geometry.distance(@next, self) > @w * buffer)
             @dest = @next
+            @mov = 1
         elsif(!@next.nil?)
             @dest = nil
         end
@@ -47,30 +55,30 @@ class Entity
                @dest.y - @y - @h_h]
 
         @to_angle = Math.atan2(mov.y, mov.x) * 180 / Math::PI
-        puts "to_angle: #{@to_angle}"
-        puts "angle: #{@angle}"
-
-        @angle = @angle % 360
-        @to_angle = 180 + (180 + @to_angle) if(@to_angle < 0)
+        @to_angle = @to_angle.abs if(@to_angle.abs >= 170)
+        @angle = -180 if(180 < @angle)
+        @angle = 180 if(-180 > @angle)
 
         if(@to_angle - 5 >= @angle || @to_angle + 5 <= @angle)
-#            if(@angle - @to_angle >= 0 && @to_angle < 150)
-#                @angle -= @speed 
-#            elsif(@angle - @to_angle < 0)
-#                @angle += @speed 
-#            end
-            @angle = @to_angle
+            if(@angle - @to_angle > 180)
+                @angle += @speed 
+                _turn_reduct = 0.5
+            elsif(@angle - @to_angle < -180)
+                @angle -= @speed 
+                _turn_reduct = 0.5
+            elsif(@angle - @to_angle >= 0)
+                @angle -= @speed 
+            elsif(@angle - @to_angle < 0)
+                @angle += @speed 
+            end
+
             _turn_reduct = 0.2
         else
             @angle = @to_angle
         end
         
-        map.remove_entity(map.calc_key([@x, @y]), @idx)
         @x += Math.cos(@angle * Math::PI / 180) * @speed * @mov * _turn_reduct
         @y += Math.sin(@angle * Math::PI / 180) * @speed * @mov * _turn_reduct
-        map.add_entity(self)
-
-        puts map.cells[map.calc_key([@x, @y])].entities
 
         char_mid = [@x + @h_w, 
                     @y + @h_h]
