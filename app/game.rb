@@ -60,28 +60,14 @@ class Game
                    @keyboard.mouse_pos.y - @character.y - @character.h_h]
 
             angle = Math.atan2(mov.y, mov.x)
-            mov.x = Math.cos(angle) * @character.speed
-            mov.y = Math.sin(angle) * @character.speed
 
-            @character.angle = angle * 180 / Math::PI
-            @character.mov = mov
+            @character.to_angle = angle * 180 / Math::PI
+            @character.mov = 1
             @character.dest = [@keyboard.mouse_pos.x, @keyboard.mouse_pos.y]
         end
 
 #       Character move
-        @character.x += @character.mov.x
-        @character.y += @character.mov.y
-
-        char_mid = [@character.x + @character.h_w, 
-                    @character.y + @character.h_h]
-
-        if(!@character.dest.nil?)
-            puts geometry.distance(char_mid, @character.dest) 
-        end
-        if(!@character.dest.nil? &&
-           geometry.distance(char_mid, @character.dest) <= @character.w / 2)
-            @character.mov = [0, 0]
-        end
+        @character.move(geometry)
     end
 
 

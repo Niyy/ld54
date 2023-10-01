@@ -21,6 +21,7 @@ class Map
         @fill_value.terrain = @terrain.sample 
         @fill_value.path = @fill_value.path 
         @fill_value.idx = [0, 0]
+        @fill_value.entities = {}
 
         @cells = {}
         @cells[[0, 0]] = @fill_value.clone()
@@ -74,6 +75,28 @@ class Map
                 cell.flora[get_idx.call] = n_flora.clone().sprite()
             end
         end
+    end
+
+
+    def add_entity(entity)
+        _key = calc_key(entity)
+
+        if(!@cells.has_key?(_key))
+            @cells[_key].entities[entity.idx] = entity
+            entity.map_key = _key
+        end
+    end
+
+
+    def remove_entity(_key, idx)
+        if(@cells.has_key?(_key))
+            @cells[_key].entities.delete(idx)
+        end
+    end
+
+
+    def calc_key(entity)
+        return [((entity.x - @x) / @w).floor(), ((entity.y - @y) / @h).floor()]
     end
 
 
