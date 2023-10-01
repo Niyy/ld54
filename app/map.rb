@@ -46,7 +46,7 @@ class Map
             @cells[next_cell].x += @x + next_cell.x * @fill_value.w
             @cells[next_cell].y += @y + next_cell.y * @fill_value.h
             @cells[next_cell].idx = next_cell
-            @cells[next_cell].terrain = @terrain.sample
+            @cells[next_cell].terrain = @terrain.sample if(!@terrain.nil?)
             @cells[next_cell].path = @cells[next_cell].terrain.path
 
             @dir.each do |n_dir|
@@ -57,7 +57,7 @@ class Map
                 end
             end
 
-            gen_resources(@cells[next_cell], get_idx)
+            gen_resources(@cells[next_cell], get_idx) if(!@terrain.nil?)
         end
     end
 
@@ -83,7 +83,7 @@ class Map
     def add_entity(entity)
         _key = calc_key(entity)
 
-        if(!@cells.has_key?(_key))
+        if(@cells.has_key?(_key))
             @cells[_key].entities[entity.idx] = entity
             entity.map_key = _key
         end

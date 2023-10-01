@@ -16,6 +16,9 @@ class Game
         @map.y = 720 / 2 - @map.fill_value.h_h
         @map.gen_map(->{gen_idx})
 
+        @map.add_entity({x: -300, y: 0, w: 100, h: 100, a: 50, idx: gen_idx,
+                         path: 'sprite/square/black.rb'})
+
         @keyboard = {
             mouse: {
                 left_button: [-2, :up]
@@ -25,10 +28,11 @@ class Game
         @col = {}
         @col[:cities] = {}
 
-        @character = Entity.new(gen_idx(), x: 1280 / 2, y: 720 / 2, speed: 1,
-                                path: 'sprites/square/orange.png')
+        @character = Main_Command.new(gen_idx(), x: 1280 / 2, y: 720 / 2, 
+                                      speed: 1, 
+                                      path: 'sprites/square/orange.png')
         follower = Entity.new(gen_idx(), x: 1280 / 2 - 100, y: 720 / 2 - 100,
-                             path: 'sprites/square/orange.png', speed: 1)
+                              path: 'sprites/square/orange.png', speed: 1)
 
         @character.prev = follower
         follower.next = @character

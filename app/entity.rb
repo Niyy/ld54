@@ -1,6 +1,7 @@
 class Entity 
+    attr_sprite
     attr_accessor :x, :y, :w, :h, :path, :speed, :mov, :h_w, :h_h, :dest, 
-                  :angle, :to_angle, :idx, :prev, :next
+                  :angle, :to_angle, :idx, :prev, :next, :map_key
 
 
     def initialize(idx, x: 0, y: 0, w: 32, h: 32, 
@@ -10,6 +11,7 @@ class Entity
         @y = y
         @w = w
         @h = h
+        @a = 255
         @angle = 0
         @to_angle = 0
         @path = path
@@ -48,17 +50,17 @@ class Entity
         puts "to_angle: #{@to_angle}"
         puts "angle: #{@angle}"
 
-        @angle = -180 if(@angle > 180)
-        @angle = 180 if(@angle < -180)
+        @angle = @angle % 360
+        @to_angle = 180 + (180 + @to_angle) if(@to_angle < 0)
 
         if(@to_angle - 5 >= @angle || @to_angle + 5 <= @angle)
-            if(@to_angle > 150 || @to_angle < -150)
-                @angle += @speed
-            elsif(@angle - @to_angle > 0)
-                @angle -= @speed 
-            elsif(@angle - @to_angle < 0)
-                @angle += @speed 
-            end
+#            if(@angle - @to_angle >= 0 && @to_angle < 150)
+#                @angle -= @speed 
+#            elsif(@angle - @to_angle < 0)
+#                @angle += @speed 
+#            end
+            @angle = @to_angle
+            _turn_reduct = 0.2
         else
             @angle = @to_angle
         end
