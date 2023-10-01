@@ -6,6 +6,8 @@ class Map
                    terrain: [{path: 'sprites/square/gray.png'}])
         @x = 0
         @y = 0
+        @w = delta
+        @h = delta
 
         @terrain = terrain
 
@@ -96,7 +98,8 @@ class Map
 
 
     def calc_key(entity)
-        return [((entity.x - @x) / @w).floor(), ((entity.y - @y) / @h).floor()]
+        return [((entity.x - @x) / @w).floor(), 
+                ((entity.y - @y) / @h).floor()]
     end
 
 
@@ -112,6 +115,17 @@ class Map
             outputs << cell_flora.flora.values
         end
            
+        return outputs
+    end
+
+
+    def output_entities()
+        outputs = []
+        
+        @cells.values.each() do |cell|
+            outputs << cell.entities.values
+        end
+
         return outputs
     end
 

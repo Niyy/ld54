@@ -1,10 +1,11 @@
 class Entity 
     attr_accessor :x, :y, :w, :h, :path, :speed, :mov, :h_w, :h_h, :dest, 
-                  :angle, :to_angle
+                  :angle, :to_angle, :idx, :prev, :next
 
 
     def initialize(idx, x: 0, y: 0, w: 32, h: 32, 
                    path: 'sprites/oh-no.png', speed: 2)
+        @idx = idx
         @x = x
         @y = y
         @w = w
@@ -29,7 +30,13 @@ class Entity
     end
 
 
-    def move(geometry)
+    def move(map, geometry)
+        if(!@next.nil? && geometry.distance(@next, self))
+            @dest = @next
+        elsif(!@next.nil?)
+            @dest = nil
+        end
+
         return if(@dest.nil?)
 
         _turn_reduct = 1.0
@@ -45,7 +52,7 @@ class Entity
         @angle = 180 if(@angle < -180)
 
         if(@to_angle - 5 >= @angle || @to_angle + 5 <= @angle)
-            if(@to_angle > 160 || @to_angle < -160)
+            if(@to_angle > 150 || @to_angle < -150)
                 @angle += @speed
             elsif(@angle - @to_angle > 0)
                 @angle -= @speed 
@@ -55,9 +62,13 @@ class Entity
         else
             @angle = @to_angle
         end
-
+        
+        map.remove_entity(map.calc_key([@x, @y]), @idx)
         @x += Math.cos(@angle * Math::PI / 180) * @speed * @mov * _turn_reduct
         @y += Math.sin(@angle * Math::PI / 180) * @speed * @mov * _turn_reduct
+        map.add_entity(self)
+
+        puts map.cells[map.calc_key([@x, @y])].entities
 
         char_mid = [@x + @h_w, 
                     @y + @h_h]

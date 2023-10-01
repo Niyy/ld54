@@ -7,9 +7,6 @@ class Game
 
 
     def initialize(args)
-        @character = Entity.new(gen_idx(), x: 1280 / 2, y: 720 / 2,
-                                path: 'sprites/square/orange.png')
-
         loaded_terrain = args.gtk.deserialize_state('data/terrain.data').terrain
         puts loaded_terrain
 
@@ -27,6 +24,17 @@ class Game
 
         @col = {}
         @col[:cities] = {}
+
+        @character = Entity.new(gen_idx(), x: 1280 / 2, y: 720 / 2, speed: 1,
+                                path: 'sprites/square/orange.png')
+        follower = Entity.new(gen_idx(), x: 1280 / 2 - 100, y: 720 / 2 - 100,
+                             path: 'sprites/square/orange.png', speed: 1)
+
+        @character.prev = follower
+        follower.next = @character
+
+        @map.add_entity(follower)
+        @map.add_entity(@character)
     end
 
 
@@ -43,6 +51,7 @@ class Game
         outputs.sprites << @map.output()
         outputs.sprites << @col[:cities].values
         outputs.sprites << @character.output()
+        outputs.sprites << @map.output_entities()
         outputs.sprites << @map.output_flora()
     end
 
@@ -67,7 +76,7 @@ class Game
         end
 
 #       Character move
-        @character.move(geometry)
+        @character.move(@map, geometry)
     end
 
 
