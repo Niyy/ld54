@@ -37,6 +37,7 @@ class Game
         @map.add_entity(follower)
         @map.add_entity(@character)
 
+<<<<<<< Updated upstream
         # Add a squad of hunters
         @hunters = []
         @hunters << Hunter.new(gen_idx(), x: -100, y: 720 * rand(),
@@ -44,6 +45,9 @@ class Game
         @hunters[0].train(10)
 
         @map.add_entity(@hunters[0])
+
+        @ui_elements = []
+        @ui_elements << Button.new()
     end
 
 
@@ -61,10 +65,17 @@ class Game
         outputs.sprites << @col[:cities].values
         outputs.sprites << @map.output_entities()
         outputs.sprites << @map.output_aux()
+
+# UI    
+        outputs.sprites << @ui_elements.map do |elem| elem.output() end
     end
 
 
     def update()
+        @ui_elements.map do |elem|
+            elem.check_for_input(inputs.mouse)
+        end
+
         if(@keyboard.mouse.left_button[0] + 1 == state.tick_count &&
                 @keyboard.mouse.left_button[1] == :up)
 #            new_city = gen_obj()
